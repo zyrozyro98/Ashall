@@ -1,0 +1,27 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    
+    "driver_locations": {
+      "$driverId": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $driverId"
+      }
+    },
+    
+    "presence": {
+      "$userId": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $userId"
+      }
+    },
+    
+    "users": {
+      "$userId": {
+        ".read": "auth != null && auth.uid === $userId",
+        ".write": "auth != null && auth.uid === $userId"
+      }
+    }
+  }
+}

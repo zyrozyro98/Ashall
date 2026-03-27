@@ -1,0 +1,54 @@
+﻿Running Gradle task 'assembleRelease'...                        
+flutter : WARNING: A 
+restricted method in 
+java.lang.System has been 
+called
+At line:1 char:1
++ flutter build apk 
+--release > build_log.txt 
+2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (WAR  
+  NING: A rest...has bee   
+ n called:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+WARNING: 
+java.lang.System::load has 
+been called by net.rubygrap
+efruit.platform.internal.Na
+tiveLibraryLoader in an 
+unnamed module (file:/C:/Us
+ers/hp/.gradle/wrapper/dist
+s/gradle-8.14-all/c2qonpi39
+x1mddn7hk5gh9iqj/gradle-8.1
+4/lib/native-platform-0.22-
+milestone-28.jar)
+WARNING: Use --enable-nativ
+e-access=ALL-UNNAMED to 
+avoid a warning for 
+callers in this module
+WARNING: Restricted 
+methods will be blocked in 
+a future release unless 
+native access is enabled
+
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 4128 bytes (99.7% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Note: Some input files use 
+or override a deprecated 
+API.
+Note: Recompile with 
+-Xlint:deprecation for 
+details.
+Running Gradle task 'assembleRelease'...                           90.1s
+Gradle build failed to 
+produce an .apk file. It's 
+likely that this file was 
+generated under C:\Users\hp
+\JDEED\flutter_application_
+1\build, but the tool 
+couldn't find it.

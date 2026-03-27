@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================
+    // Helper Functions
+    // ============================================
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Retrieve the user role from Firestore:
+    // 0 = customer, 1 = merchant, 2 = driver, 3 = admin
+    function getUserRole() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return userDoc != null ? userDoc.data.role : -1;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && getUserRole() == 3;
+    }
+
+    function isDriver() {
+      return isSignedIn() && getUserRole() == 2;
+    }
+
+    function isMerchant() {
+      return isSignedIn() && getUserRole() == 1;
+    }
+
+    function isCustomer() {
+      return isSignedIn() && getUserRole() == 0;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // ============================================
+    // Collection Rules
+    // ============================================
+
+    // 1. Users Collection
+    match /users/{userId} {
+      // Anyone signed in can create their own profile (used during Sign Up)
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      // Users can read/update their own profile, Admins can read/update all
+      allow read, update, delete: if isOwner(userId) || isAdmin();
+    }
+
+    // 2. Products Collection
+    match /products/{productId} {
+      // Anyone can browse products
+      allow read: if true;
+      // Admins can do anything. Merchants can only modify their OWN products.
+      allow create: if isAdmin() || (isMerchant() && request.resource.data.merchantId == request.auth.uid);
+      allow update, delete: if isAdmin() || (isMerchant() && resource.data.merchantId == request.auth.uid);
+    }
+
+    // 3. Orders Collection
+    match /orders/{orderId} {
+      // Customers read their own orders. Merchants read orders targeting them.
+      // Drivers and Admins can read all orders.
+      allow read: if isAdmin() || isDriver() || 
+                  (isSignedIn() && resource.data.customerId == request.auth.uid) ||
+                  (isMerchant() && resource.data.merchantId == request.auth.uid);
+      
+      // Customers can create orders for themselves
+      allow create: if isSignedIn() && request.resource.data.customerId == request.auth.uid;
+      
+      // Updates are allowed for Admins, Drivers, the target Merchant, or the Customer who owns it
+      allow update: if isAdmin() || isDriver() || 
+                    (isMerchant() && resource.data.merchantId == request.auth.uid) ||
+                    (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // 4. Transactions Collection (Wallet Top-ups and Payments)
+    match /transactions/{transactionId} {
+      // Customers can read their own transactions. Admins read all.
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      
+      // Customers can create their top-up requests
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      
+      // Only Admins can update statuses (Approve/Reject) or delete
+      allow update, delete: if isAdmin();
+    }
+
+    // 5. Support Chats Collection
+    match /support_chats/{userId} {
+      // Customers can read/write their own chat. Admins can read/write all.
+      allow read, write: if isOwner(userId) || isAdmin();
+      
+      // Messages sub-collection
+      match /messages/{messageId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+  }
+}

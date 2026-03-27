@@ -1,0 +1,66 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/C:/Users/hp/.gradle/wrapper/dists/gradle-8.14-all/c2qonpi39x1mddn7hk5gh9iqj/gradle-8.14/lib/native-platform-0.22-milestone-28.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+> Task :gradle:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle:compileKotlin UP-TO-DATE
+> Task :gradle:compileJava NO-SOURCE
+> Task :gradle:compileGroovy NO-SOURCE
+> Task :gradle:pluginDescriptors UP-TO-DATE
+> Task :gradle:processResources UP-TO-DATE
+> Task :gradle:classes UP-TO-DATE
+> Task :gradle:jar UP-TO-DATE
+
+> Configure project :
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle.kts'
+Build was configured to prefer settings repositories over project repositories but repository 'MavenRepo' was added by build file 'build.gradle.kts'
+
+FAILURE: Build failed with an exception.
+
+* Where:
+Build file 'C:\Users\hp\JDEED\flutter_application_1\android\build.gradle.kts' line: ١٢
+
+* What went wrong:
+Circular evaluation detected: map(org.gradle.api.file.Directory property(org.gradle.api.file.Directory, <CIRCULAR REFERENCE>) org.gradle.api.internal.file.DefaultFilePropertyFactory$PathToDirectoryTransformer@3145e9e1)
+ -> property(org.gradle.api.file.Directory, map(org.gradle.api.file.Directory <CIRCULAR REFERENCE> org.gradle.api.internal.file.DefaultFilePropertyFactory$PathToDirectoryTransformer@3145e9e1))
+ -> map(org.gradle.api.file.Directory property(org.gradle.api.file.Directory, <CIRCULAR REFERENCE>) org.gradle.api.internal.file.DefaultFilePropertyFactory$PathToDirectoryTransformer@3145e9e1)
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 1s
+٤ actionable tasks: ٤ up-to-date
