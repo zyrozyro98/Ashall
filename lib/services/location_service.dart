@@ -27,8 +27,13 @@ class LocationService {
 
   // Get current location
   Future<LatLng?> getCurrentLocation() async {
-    LocationData locData = await _location.getLocation();
-    return LatLng(locData.latitude!, locData.longitude!);
+    try {
+      LocationData locData = await _location.getLocation();
+      if (locData.latitude == null || locData.longitude == null) return null;
+      return LatLng(locData.latitude!, locData.longitude!);
+    } catch (e) {
+      return null;
+    }
   }
 
   // Stream location updates (for driver)

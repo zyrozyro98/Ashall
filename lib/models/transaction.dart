@@ -1,4 +1,4 @@
-enum TransactionType { recharge, payment, refund }
+enum TransactionType { recharge, payment, refund, withdrawal }
 enum TransactionStatus { pending, approved, rejected }
 
 class AppTransaction {
@@ -9,6 +9,7 @@ class AppTransaction {
   final TransactionStatus status;
   final String referenceNumber; // Transfer ID or Payment Code
   final DateTime timestamp;
+  final String? note; // Optional reason or payment details
 
   AppTransaction({
     required this.id,
@@ -17,6 +18,7 @@ class AppTransaction {
     required this.type,
     required this.status,
     required this.referenceNumber,
+    this.note,
     required this.timestamp,
   });
 
@@ -28,6 +30,7 @@ class AppTransaction {
       'status': status.index,
       'referenceNumber': referenceNumber,
       'timestamp': timestamp,
+      'note': note,
     };
   }
 
@@ -40,6 +43,7 @@ class AppTransaction {
       status: TransactionStatus.values[map['status'] ?? 0],
       referenceNumber: map['referenceNumber'] ?? '',
       timestamp: (map['timestamp'] as dynamic).toDate(),
+      note: map['note'],
     );
   }
 }

@@ -11,15 +11,17 @@ class OrderItem {
   final String name;
   final int quantity;
   final double price;
+  final String merchantId; // Track which merchant this came from
 
-  OrderItem({required this.productId, required this.name, required this.quantity, required this.price});
+  OrderItem({required this.productId, required this.name, required this.quantity, required this.price, required this.merchantId});
 
-  Map<String, dynamic> toMap() => {'productId': productId, 'name': name, 'quantity': quantity, 'price': price};
+  Map<String, dynamic> toMap() => {'productId': productId, 'name': name, 'quantity': quantity, 'price': price, 'merchantId': merchantId};
   factory OrderItem.fromMap(Map<String, dynamic> map) => OrderItem(
-    productId: map['productId'],
-    name: map['name'],
-    quantity: map['quantity'],
-    price: (map['price'] ?? 0.0).toDouble()
+    productId: map['productId'] ?? '',
+    name: map['name'] ?? '',
+    quantity: map['quantity'] ?? 1,
+    price: (map['price'] ?? 0.0).toDouble(),
+    merchantId: map['merchantId'] ?? 'unknown'
   );
 }
 
@@ -37,6 +39,9 @@ class AppOrder {
   final GeoPoint? customerLoc;
   final GeoPoint? merchantLoc;
   final GeoPoint? driverLoc;
+  final double? rating;
+  final String? feedback;
+  final double deliveryFee;
 
   AppOrder({
     required this.id,
@@ -52,6 +57,9 @@ class AppOrder {
     this.customerLoc,
     this.merchantLoc,
     this.driverLoc,
+    this.rating,
+    this.feedback,
+    required this.deliveryFee,
   });
 
   Map<String, dynamic> toMap() {
@@ -68,6 +76,9 @@ class AppOrder {
       'customerLoc': customerLoc,
       'merchantLoc': merchantLoc,
       'driverLoc': driverLoc,
+      'rating': rating,
+      'feedback': feedback,
+      'deliveryFee': deliveryFee,
     };
   }
 
@@ -80,12 +91,15 @@ class AppOrder {
       items: (map['items'] as List?)?.map((i) => OrderItem.fromMap(i)).toList() ?? [],
       totalPrice: (map['totalPrice'] ?? 0.0).toDouble(),
       status: OrderStatus.values[map['status'] ?? 0],
-      timestamp: (map['timestamp'] as Timestamp).toDate(),
+      timestamp: map['timestamp'] != null ? (map['timestamp'] as Timestamp).toDate() : DateTime.now(),
       paymentMethod: PaymentMethod.values[map['paymentMethod'] ?? 0],
       walletCode: map['walletCode'],
       customerLoc: map['customerLoc'],
       merchantLoc: map['merchantLoc'],
       driverLoc: map['driverLoc'],
+      rating: map['rating'] != null ? (map['rating'] as num).toDouble() : null,
+      feedback: map['feedback'],
+      deliveryFee: (map['deliveryFee'] ?? 0.0).toDouble(),
     );
   }
 }

@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // تم إيقاف خدمة Firebase Storage بالكامل كما طلبت.
+    // لن يتمكن أي شخص من رفع أو قراءة أي ملفات من هنا، مما يضمن صفر استهلاك.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

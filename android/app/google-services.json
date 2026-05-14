@@ -1,21 +1,22 @@
 {
   "project_info": {
-    "project_number": "256566981785",
-    "project_id": "ashall-1",
-    "storage_bucket": "ashall-1.firebasestorage.app"
+    "project_number": "284472595681",
+    "firebase_url": "https://ashal1-default-rtdb.firebaseio.com",
+    "project_id": "ashal1",
+    "storage_bucket": "ashal1.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:256566981785:android:3442eee02c99a0f8f27408",
+        "mobilesdk_app_id": "1:284472595681:android:ff82435da8a025a45813a0",
         "android_client_info": {
-          "package_name": "com.ashall"
+          "package_name": "com.zohier.ashall"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBzsMyaLQpBu7gj6UfMdEfzLqAQRORNX1k"
+          "current_key": "AIzaSyAVQmAVIKi--D7E_AEFhpubiLpufC3oyH8"
         }
       ],
       "services": {

@@ -7,6 +7,9 @@ class Product {
   final double price;
   final String imageUrl;
   final bool isAvailable;
+  final String category;
+  final bool isPromoted;
+
 
   Product({
     required this.id,
@@ -17,6 +20,8 @@ class Product {
     required this.price,
     required this.imageUrl,
     this.isAvailable = true,
+    this.category = "غير مصنف",
+    this.isPromoted = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -29,6 +34,8 @@ class Product {
       'price': price,
       'imageUrl': imageUrl,
       'isAvailable': isAvailable,
+      'category': category,
+      'isPromoted': isPromoted,
     };
   }
 
@@ -42,6 +49,8 @@ class Product {
       price: _parseDouble(map['price']),
       imageUrl: map['imageUrl']?.toString() ?? '',
       isAvailable: _parseBool(map['isAvailable'], true),
+      category: map['category']?.toString() ?? 'أخرى',
+      isPromoted: _parseBool(map['isPromoted'], false),
     );
   }
 

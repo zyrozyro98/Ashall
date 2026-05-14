@@ -22,23 +22,48 @@ class CartProvider with ChangeNotifier {
     return total;
   }
 
-  bool addItem(String productId, String name, double price) {
-    // If the item is already in the cart, do NOT add it again (prevents duplication)
-    if (!_items.containsKey(productId)) {
+  bool addItem(String productId, String name, double price, String merchantId) {
+    if (_items.containsKey(productId)) {
+      var old = _items[productId]!;
+      _items[productId] = OrderItem(
+        productId: productId, 
+        name: name, 
+        quantity: old.quantity + 1, 
+        price: price, 
+        merchantId: merchantId
+      );
+    } else {
       _items.putIfAbsent(productId, () => OrderItem(
         productId: productId, 
         name: name, 
         quantity: 1, 
-        price: price
+        price: price,
+        merchantId: merchantId,
       ));
-      notifyListeners();
-      return true;
     }
-    return false;
+    notifyListeners();
+    return true;
   }
 
   void removeItem(String productId) {
     _items.remove(productId);
+    notifyListeners();
+  }
+
+  void removeByOne(String productId) {
+    if (!_items.containsKey(productId)) return;
+    if (_items[productId]!.quantity > 1) {
+      final old = _items[productId]!;
+      _items[productId] = OrderItem(
+        productId: productId, 
+        name: old.name, 
+        quantity: old.quantity - 1, 
+        price: old.price, 
+        merchantId: old.merchantId
+      );
+    } else {
+      _items.remove(productId);
+    }
     notifyListeners();
   }
 

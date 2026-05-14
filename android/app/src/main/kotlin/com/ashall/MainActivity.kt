@@ -1,5 +1,5 @@
-package com.ashall
+package com.zohier.ashall
 
 import io.flutter.embedding.android.FlutterActivity
 
-class MainActivity : FlutterActivity()
+class MainActivity: FlutterActivity()

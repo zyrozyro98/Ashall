@@ -16,17 +16,19 @@ class SupportService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // Send support request
-  Future<void> sendSupportMessage(String userId, String content) async {
+  Future<void> sendSupportMessage(String userId, String content, {String? senderId}) async {
+    final sId = senderId ?? userId;
     await _db.collection('support_chats').doc(userId).collection('messages').add({
-      'senderId': userId,
+      'senderId': sId,
       'content': content,
       'timestamp': FieldValue.serverTimestamp(),
     });
-    // Update main chat flag
+    // Update main chat summary
     await _db.collection('support_chats').doc(userId).set({
       'userId': userId,
+      'lastMessage': content,
       'lastUpdate': FieldValue.serverTimestamp(),
-      'unreadCount': FieldValue.increment(1)
+      'unreadCount': sId == userId ? FieldValue.increment(1) : 0, // Reset if admin replies
     }, SetOptions(merge: true));
   }
 

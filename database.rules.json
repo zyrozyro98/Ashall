@@ -2,21 +2,31 @@
   "rules": {
     ".read": false,
     ".write": false,
-    
+    "images_base64": {
+      "$imageId": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".validate": "newData.isString() && newData.val().length < 100000"
+      }
+    },
+    "tracking": {
+      "$orderId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
     "driver_locations": {
       "$driverId": {
         ".read": "auth != null",
         ".write": "auth != null && auth.uid === $driverId"
       }
     },
-    
     "presence": {
       "$userId": {
         ".read": "auth != null",
         ".write": "auth != null && auth.uid === $userId"
       }
     },
-    
     "users": {
       "$userId": {
         ".read": "auth != null && auth.uid === $userId",

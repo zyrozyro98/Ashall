@@ -2,101 +2,128 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ============================================
-    // Helper Functions
-    // ============================================
+    // --- Helper Functions ---
     
+    // Check if user is authenticated
     function isSignedIn() {
       return request.auth != null;
     }
     
-    // Retrieve the user role from Firestore:
-    // 0 = customer, 1 = merchant, 2 = driver, 3 = admin
+    // Fetch the user's role from their profile document
     function getUserRole() {
-      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
-      return userDoc != null ? userDoc.data.role : -1;
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role 
+        : -1;
     }
 
+    // Role checks
     function isAdmin() {
-      return isSignedIn() && getUserRole() == 3;
+      return isSignedIn() && (getUserRole() == 3 || getUserRole() == 'admin' || getUserRole() == 'Admin');
     }
 
     function isDriver() {
-      return isSignedIn() && getUserRole() == 2;
+      return isSignedIn() && (getUserRole() == 2 || getUserRole() == 'driver' || getUserRole() == 'Driver');
     }
 
     function isMerchant() {
-      return isSignedIn() && getUserRole() == 1;
+      return isSignedIn() && (getUserRole() == 1 || getUserRole() == 'merchant' || getUserRole() == 'Merchant');
     }
 
-    function isCustomer() {
-      return isSignedIn() && getUserRole() == 0;
-    }
-
+    // Check if the document belongs to the authenticated user
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // ============================================
-    // Collection Rules
-    // ============================================
+    // --- Collection Rules ---
 
     // 1. Users Collection
     match /users/{userId} {
-      // Anyone signed in can create their own profile (used during Sign Up)
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      // Users can read/update their own profile, Admins can read/update all
-      allow read, update, delete: if isOwner(userId) || isAdmin();
+      // Everyone who is signed in can read user documents
+      allow read: if isSignedIn();
+      
+      // Users can create their own account.
+      allow create: if isOwner(userId);
+      
+      // Users can update their own data. Role/balance checking is relaxed temporarily to fix login loop.
+      allow update: if isOwner(userId) || isAdmin();
+      
+      allow delete: if isAdmin();
     }
 
     // 2. Products Collection
     match /products/{productId} {
-      // Anyone can browse products
+      // Anyone can read products. 
+      // هام جداً: يرجى تفعيل Firebase App Check لحماية هذه القاعدة من الاستهلاك العشوائي بواسطة البوتات.
       allow read: if true;
-      // Admins can do anything. Merchants can only modify their OWN products.
-      allow create: if isAdmin() || (isMerchant() && request.resource.data.merchantId == request.auth.uid);
+      
+      // Only Merchants can create products, and the product must be assigned to them
+      allow create: if (isMerchant() && request.resource.data.merchantId == request.auth.uid) || isAdmin();
+      
+      // Only the merchant who owns the product (or Admin) can update/delete it
       allow update, delete: if isAdmin() || (isMerchant() && resource.data.merchantId == request.auth.uid);
     }
 
-    // 3. Orders Collection
+    // 3. Categories Collection
+    match /categories/{categoryId} {
+      // Anyone can read categories
+      allow read: if true;
+      // Only Admin can add/edit categories
+      allow write: if isAdmin();
+    }
+
+    // 4. Orders Collection
     match /orders/{orderId} {
-      // Customers read their own orders. Merchants read orders targeting them.
-      // Drivers and Admins can read all orders.
-      allow read: if isAdmin() || isDriver() || 
-                  (isSignedIn() && resource.data.customerId == request.auth.uid) ||
-                  (isMerchant() && resource.data.merchantId == request.auth.uid);
-      
-      // Customers can create orders for themselves
+      // Customers can read their own orders. Merchants can read their store's orders.
+      // Drivers can read ALL orders (needed for the "Available Orders / Radar" feature to see unassigned orders).
+      allow read: if isSignedIn() && (
+        resource.data.customerId == request.auth.uid || 
+        resource.data.merchantId == request.auth.uid || 
+        isDriver() ||
+        isAdmin()
+      );
+
+      // Only Customers can create an order, and they must set themselves as the customerId.
       allow create: if isSignedIn() && request.resource.data.customerId == request.auth.uid;
+
+      // Update rules:
+      allow update: if isSignedIn() && (
+        resource.data.customerId == request.auth.uid || 
+        resource.data.merchantId == request.auth.uid || 
+        resource.data.driverId == request.auth.uid || 
+        (isDriver() && (resource.data.driverId == null || resource.data.driverId == "") && request.resource.data.driverId == request.auth.uid) || 
+        isAdmin()
+      );
       
-      // Updates are allowed for Admins, Drivers, the target Merchant, or the Customer who owns it
-      allow update: if isAdmin() || isDriver() || 
-                    (isMerchant() && resource.data.merchantId == request.auth.uid) ||
-                    (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow delete: if isAdmin();
     }
 
-    // 4. Transactions Collection (Wallet Top-ups and Payments)
+    // 5. Transactions / Wallet
     match /transactions/{transactionId} {
-      // Customers can read their own transactions. Admins read all.
-      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      
-      // Customers can create their top-up requests
+      // Users can only read their own transactions
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      // Users can create a transaction log (e.g., pending recharge)
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      
-      // Only Admins can update statuses (Approve/Reject) or delete
+      // Only Admins can approve/update/delete transactions
       allow update, delete: if isAdmin();
     }
 
-    // 5. Support Chats Collection
+    // 6. Support Chats
     match /support_chats/{userId} {
-      // Customers can read/write their own chat. Admins can read/write all.
+      // Users can read/write their own support chats. Admin can read/write all.
       allow read, write: if isOwner(userId) || isAdmin();
       
-      // Messages sub-collection
+      // Allow operations on messages inside the chat
       match /messages/{messageId} {
         allow read, write: if isOwner(userId) || isAdmin();
       }
+    }
+
+    // 7. System Settings
+    match /system_settings/{docId} {
+      // Everyone can read global settings (fees, currency, app version, etc.)
+      allow read: if true;
+      // Only admin can change settings
+      allow write: if isAdmin();
     }
   }
 }

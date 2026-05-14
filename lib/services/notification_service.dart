@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
@@ -21,7 +24,7 @@ class NotificationService {
       badge: true,
       sound: true,
     );
-    print('User granted permission: ${settings.authorizationStatus}');
+    debugPrint('User granted permission: ${settings.authorizationStatus}');
 
     // Advanced Local Notifications Setup (Android & iOS)
     const AndroidInitializationSettings initAndroid = AndroidInitializationSettings('@mipmap/launcher_icon');
@@ -35,7 +38,7 @@ class NotificationService {
       initSet,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         if (response.payload != null) {
-          print("User tapped a local notification! Payload: ${response.payload}");
+          debugPrint("User tapped a local notification! Payload: ${response.payload}");
           // Add custom routing logic here based on your payload
         }
       },
@@ -53,9 +56,9 @@ class NotificationService {
 
     // Handle Foreground Messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print("Foreground message received: ${message.notification?.title}");
+      debugPrint("Foreground message received: ${message.notification?.title}");
       if (message.data.isNotEmpty) {
-        print("Message data payload: ${message.data}");
+        debugPrint("Message data payload: ${message.data}");
       }
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
@@ -84,35 +87,42 @@ class NotificationService {
 
     // Handle Background/Terminated Messages
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print("User tapped a notification from background! Data: ${message.data}");
+      debugPrint("User tapped a notification from background! Data: ${message.data}");
     });
 
     // Handle App completely terminated and opened by clicking a notification
     RemoteMessage? initialMessage = await _fcm.getInitialMessage();
     if (initialMessage != null) {
-      print("User opened the app from a terminated state via notification! Data: ${initialMessage.data}");
+      debugPrint("User opened the app from a terminated state via notification! Data: ${initialMessage.data}");
     }
 
     // Subscribe to a general topic (for global announcements)
-    await _fcm.subscribeToTopic('all_users').catchError((e) => print("Topic subscription error: $e"));
-    print("Subscribed to global 'all_users' topic");
+    await _fcm.subscribeToTopic('all_users').catchError((e) => debugPrint("Topic subscription error: $e"));
+    debugPrint("Subscribed to global 'all_users' topic");
     
-    // Listen to token refresh
-    _fcm.onTokenRefresh.listen((newToken) {
-      print("FCM Token Refreshed: $newToken");
-      // Optionally update the db if user is logged in
+    // Listen to token refresh and update Firestore if possible
+    _fcm.onTokenRefresh.listen((newToken) async {
+      debugPrint("FCM Token Refreshed: $newToken");
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        try {
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'fcmToken': newToken});
+        } catch (e) {
+          debugPrint("Token sync on refresh failed: $e");
+        }
+      }
     });
   }
 
   // Topics functions
   Future<void> subscribeToTopic(String topic) async {
     await _fcm.subscribeToTopic(topic);
-    print("Subscribed to topic: $topic");
+    debugPrint("Subscribed to topic: $topic");
   }
 
   Future<void> unsubscribeFromTopic(String topic) async {
     await _fcm.unsubscribeFromTopic(topic);
-    print("Unsubscribed from topic: $topic");
+    debugPrint("Unsubscribed from topic: $topic");
   }
 
   Future<String?> getToken() async {
