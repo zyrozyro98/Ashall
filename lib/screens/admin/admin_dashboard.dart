@@ -39,7 +39,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
     "المعاملات المالية",
     "مركز الدعم الفني",
     "طلبات النظام",
-    "إعدادات التطبيق"
+    "إعدادات التطبيق",
+    "توثيق الحسابات الذكي"
   ];
 
   List<AppOrder> _overdueOrders = [];
