@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/app_user.dart';
 import '../../services/auth_service.dart';
 import '../../utils/style_constants.dart';
+import '../../utils/phone_utils.dart';
 import '../../widgets/premium_ui.dart';
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -10,6 +11,7 @@ class SignupScreen extends StatefulWidget {
   State<SignupScreen> createState() => _SignupScreenState();
 }
 
+class _SignupScreenState extends State<SignupScreen> {
   final _passC = TextEditingController();
   final _nameC = TextEditingController();
   final _phoneC = TextEditingController(text: '+967');
@@ -167,18 +169,23 @@ class SignupScreen extends StatefulWidget {
       return;
     }
 
-    // Lenient phone check: Must contain at least 9 digits
-    if (!RegExp(r'^[0-9+]{9,15}$').hasMatch(phone)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى إدخال رقم هاتف صحيح")));
+    if (!PhoneUtils.isValidPhone(phone)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("يرجى إدخال رقم هاتف يمني صحيح (مثال: 777123456)"),
+        backgroundColor: Colors.red,
+      ));
       return;
     }
     
     setState(() => _isLoading = true);
 
     try {
-      String generatedEmail = "${phone.replaceAll('+', '')}@ashall.com";
+      final normalized = PhoneUtils.normalizePhone(phone);
+      final generatedEmail = "$normalized@ashall.com";
+      final formattedPhone = "+$normalized";
+      
       // 1. Create account directly via Phone (mapped to Email internally)
-      await _auth.signUp(generatedEmail, pass, name, _selectedRole, phone: phone);
+      await _auth.signUp(generatedEmail, pass, name, _selectedRole, phone: formattedPhone);
       
       if (!mounted) return;
       
@@ -189,8 +196,8 @@ class SignupScreen extends StatefulWidget {
         duration: Duration(seconds: 3),
       ));
       
-      // 3. Move to home
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      // 3. Move to home (which will redirect to verification if not verified)
+      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
 
     } catch (e) {
       if (!mounted) return;

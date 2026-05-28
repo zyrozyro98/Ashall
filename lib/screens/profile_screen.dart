@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../models/app_user.dart';
 import '../services/database_service.dart';
 import '../utils/style_constants.dart';
+import '../utils/phone_utils.dart';
 import '../widgets/premium_ui.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/verification_service.dart';
@@ -144,6 +145,7 @@ class ProfileScreen extends StatelessWidget {
   void _showSmartVerificationBottomSheet(BuildContext context, AppUser user) {
     final phoneC = TextEditingController(text: user.phone ?? '+967');
     final SmartVerificationService verifyS = SmartVerificationService();
+    final auth = Provider.of<AuthService>(context, listen: false);
     bool isLoading = false;
 
     showModalBottomSheet(
@@ -204,18 +206,23 @@ class ProfileScreen extends StatelessWidget {
                   icon: Icons.chat_bubble_rounded,
                   isLoading: isLoading,
                   onPressed: () async {
-                    if (phoneC.text.length < 9) {
-                      ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text("يرجى إدخال رقم هاتف صحيح")));
+                    if (!PhoneUtils.isValidPhone(phoneC.text)) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
+                        content: Text("يرجى إدخال رقم هاتف يمني صحيح (مثال: 777123456)"),
+                        backgroundColor: Colors.red,
+                      ));
                       return;
                     }
 
                     setStateSheet(() => isLoading = true);
                     try {
+                      final normalized = PhoneUtils.normalizePhone(phoneC.text);
+                      final formattedPhone = "+$normalized";
                       final adminPhone = Provider.of<SystemSettingsProvider>(ctx, listen: false).settings.contactPhone;
                       final token = verifyS.generateToken();
                       
                       // Check for active orders if changing phone
-                      if (user.phone != null && user.phone != phoneC.text) {
+                      if (user.phone != null && user.phone != formattedPhone) {
                           bool hasActive = await DatabaseService().hasActiveUserOrders(user.uid);
                           if (hasActive) {
                               if (!ctx.mounted) return;
@@ -223,18 +230,19 @@ class ProfileScreen extends StatelessWidget {
                               setStateSheet(() => isLoading = false);
                               return;
                           }
+                          
+                          // Update email in Auth and phone in Firestore
+                          await auth.updatePhoneAndEmail(phoneC.text);
                       }
 
-                      // Update Firestore with new number and unverified status
+                      // Update verification token in Firestore
                       await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-                        'phone': phoneC.text,
-                        'isPhoneVerified': false,
-                        'lastPhoneChange': DateTime.now().toIso8601String(),
+                        'verificationToken': token,
                       });
 
                       // Launch WhatsApp
                       await verifyS.startWhatsAppVerification(
-                        phone: phoneC.text,
+                        phone: formattedPhone,
                         token: token,
                         adminPhone: adminPhone,
                       );

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/app_user.dart';
+import '../utils/phone_utils.dart';
 import 'notification_service.dart';
 
 class AuthService {
@@ -151,6 +152,34 @@ class AuthService {
     }
   }
 
+  // --- Update Phone and Mapped Email ---
+  Future<void> updatePhoneAndEmail(String rawPhone) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw Exception("لا يوجد مستخدم مسجل حالياً");
+
+      final normalized = PhoneUtils.normalizePhone(rawPhone);
+      final newEmail = "$normalized@ashall.com";
+      final formattedPhone = "+$normalized";
+
+      // 1. Update Firebase Auth Email
+      // ignore: deprecated_member_use
+      await user.updateEmail(newEmail);
+
+      // 2. Update Firestore
+      await _db.collection('users').doc(user.uid).update({
+        'phone': formattedPhone,
+        'email': newEmail,
+        'isPhoneVerified': false,
+        'lastPhoneChange': DateTime.now().toIso8601String(),
+      });
+    } on FirebaseAuthException catch (e) {
+      throw Exception(_getArabicMessage(e.code));
+    } catch (e) {
+      throw Exception("فشل تحديث رقم الهاتف: $e");
+    }
+  }
+
   String _getArabicMessage(String code) {
     switch (code) {
       case 'user-not-found': return "المستخدم غير موجود";
@@ -161,6 +190,7 @@ class AuthService {
       case 'credential-already-in-use': return "رقم الهاتف هذا مستخدم بالفعل في حساب آخر";
       case 'invalid-verification-code': return "كود التحقق غير صحيح";
       case 'too-many-requests': return "لقد تم إرسال طلبات كثيرة جداً، يرجى المحاولة لاحقاً";
+      case 'requires-recent-login': return "من أجل الأمان، يرجى تسجيل الخروج ثم الدخول مجدداً لتحديث رقم الهاتف.";
       default: return "حدث خطأ ما، يرجى المحاولة لاحقاً ($code)";
     }
   }

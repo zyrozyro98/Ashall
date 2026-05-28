@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/style_constants.dart';
+import '../../utils/phone_utils.dart';
 import '../../widgets/premium_ui.dart';
 import '../../services/auth_service.dart';
 import 'signup_screen.dart';
@@ -129,7 +130,21 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       // Smart Email Fallback: If the user inputs an email (like an admin zyrozyro98@gmail.com), use it.
       // Otherwise, assume it's a phone number and generate the mapped email.
-      String loginEmail = input.contains('@') ? input : "${input.replaceAll('+', '')}@ashall.com";
+      String loginEmail;
+      if (input.contains('@')) {
+        loginEmail = input;
+      } else {
+        String normalized = PhoneUtils.normalizePhone(input);
+        if (normalized.isEmpty || normalized.length < 9) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("يرجى إدخال رقم هاتف صحيح"),
+            backgroundColor: Colors.red,
+          ));
+          setState(() => _isLoading = false);
+          return;
+        }
+        loginEmail = "$normalized@ashall.com";
+      }
       
       await _authS.signIn(loginEmail, pass);
       if (!mounted) return;

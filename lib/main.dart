@@ -9,6 +9,7 @@ import 'utils/style_constants.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/phone_verification_enforcer.dart';
 import 'screens/customer/customer_dashboard.dart';
 import 'screens/merchant/merchant_dashboard.dart';
 import 'screens/driver/driver_dashboard.dart';
@@ -196,6 +197,11 @@ class AuthWrapper extends StatelessWidget {
                   ),
                 ),
               );
+            }
+
+            // Enforce phone verification for non-admin accounts
+            if (!appUser.isPhoneVerified && appUser.role != UserRole.admin) {
+              return PhoneVerificationEnforcerScreen(user: appUser);
             }
 
             // Success Case

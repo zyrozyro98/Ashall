@@ -920,6 +920,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             children: [
                               Text(userData['name'] ?? 'بدون اسم', style: const TextStyle(fontWeight: FontWeight.bold)),
                               Text(userData['phone'] ?? 'بدون هاتف', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                              if (userData['verificationToken'] != null && userData['verificationToken'].toString().isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4.0),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.key_rounded, size: 12, color: Colors.orange),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        "رمز التفعيل: ${userData['verificationToken']}",
+                                        style: const TextStyle(color: Colors.orange, fontSize: 11, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                             ],
                           ),
                         ),
