@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart' as intl_pkg;
 
 import '../../providers/system_settings_provider.dart';
 import '../../services/auth_service.dart';
@@ -16,7 +15,6 @@ import '../../models/order.dart';
 import '../../widgets/premium_ui.dart';
 
 // Import Admin Modules
-import 'modules/stats_module.dart';
 import 'modules/user_management.dart';
 import 'modules/product_moderation.dart';
 import 'modules/settings_module.dart';
@@ -957,22 +955,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
         const SizedBox(height: 4),
         Text(val, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: color ?? Colors.black87)),
-      ],
-    );
-  }
-}
-
-class _LegendItem extends StatelessWidget {
-  final Color color;
-  final String label;
-  const _LegendItem({required this.color, required this.label});
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 8),
-        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
       ],
     );
   }

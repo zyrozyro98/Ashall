@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:provider/provider.dart';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
-import '../../providers/system_settings_provider.dart';
 import '../../models/order.dart';
 import '../../models/app_user.dart';
 import '../../utils/style_constants.dart';
@@ -64,7 +62,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     
     if (byteData != null) {
       setState(() {
-        _motorcycleIcon = BitmapDescriptor.fromBytes(byteData.buffer.asUint8List());
+        _motorcycleIcon = BitmapDescriptor.bytes(byteData.buffer.asUint8List());
       });
     }
   }
@@ -159,7 +157,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             position: _rtdbDriverPos!,
             icon: _motorcycleIcon ?? BitmapDescriptor.defaultMarker,
             anchor: const Offset(0.5, 0.5),
-            zIndex: 5,
+            zIndexInt: 5,
           ));
         }
 

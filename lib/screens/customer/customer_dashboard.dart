@@ -50,7 +50,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
       backgroundColor: AshallTheme.backgroundColor,
       body: _buildPageContent(),
       floatingActionButton: Consumer<CartProvider>(
-        builder: (_, cart, _1) => cart.itemCount > 0 ? FloatingActionButton.extended(
+        builder: (context, cart, child) => cart.itemCount > 0 ? FloatingActionButton.extended(
           onPressed: () => _showCart(context, cart),
           backgroundColor: AshallTheme.secondaryColor,
           icon: const Icon(Icons.shopping_bag_rounded, color: Colors.white),

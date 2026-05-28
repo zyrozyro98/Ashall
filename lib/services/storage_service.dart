@@ -13,18 +13,14 @@ class StorageService {
   // Upload product image to ImgBB
   Future<String?> uploadProductImage(File file, String productId) async {
     String? url = await _uploadToImgBB(file, _imgbbApiKey);
-    if (url == null) {
-      url = await _uploadToImgBB(file, _imgbbApiKeyAlt);
-    }
+    url ??= await _uploadToImgBB(file, _imgbbApiKeyAlt);
     return url;
   }
 
   // Upload profile image to ImgBB
   Future<String?> uploadProfileImage(File file, String userId) async {
     String? url = await _uploadToImgBB(file, _imgbbApiKey);
-    if (url == null) {
-      url = await _uploadToImgBB(file, _imgbbApiKeyAlt);
-    }
+    url ??= await _uploadToImgBB(file, _imgbbApiKeyAlt);
     return url;
   }
 

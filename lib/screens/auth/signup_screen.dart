@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../../models/app_user.dart';
 import '../../services/auth_service.dart';
 import '../../utils/style_constants.dart';

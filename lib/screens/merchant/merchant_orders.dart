@@ -252,25 +252,6 @@ class _MerchantOrdersScreenState extends State<MerchantOrdersScreen> {
     );
   }
 
-  Widget _buildActionButtons(AppOrder o) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Expanded(
-          child: PremiumButton(
-            text: "قبول البدء 🍳", 
-            onPressed: () => _db.updateOrderStatus(o.id, OrderStatus.preparing),
-          ),
-        ),
-        const SizedBox(width: 10),
-        IconButton(
-          icon: const Icon(Icons.cancel_outlined, color: Colors.redAccent),
-          onPressed: () => _showCancelDialog(o.id),
-        ),
-      ],
-    );
-  }
-
   void _showCancelDialog(String orderId) {
     showDialog(
       context: context,

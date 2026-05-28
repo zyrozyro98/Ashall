@@ -5,11 +5,11 @@ import 'package:provider/provider.dart';
 import 'dart:math' show cos, sqrt, asin;
 
 import '../../models/order.dart';
+import '../../providers/system_settings_provider.dart';
 import '../../services/database_service.dart';
 import '../../services/location_service.dart';
 import '../../utils/style_constants.dart';
 import '../../widgets/premium_ui.dart';
-import '../../providers/system_settings_provider.dart';
 import 'active_delivery.dart';
 
 class AvailableOrdersMapScreen extends StatefulWidget {
@@ -25,11 +25,10 @@ class _AvailableOrdersMapScreenState extends State<AvailableOrdersMapScreen> {
   final LocationService _locService = LocationService();
   GoogleMapController? _mapController;
   
+
   LatLng _currentPos = const LatLng(25.2048, 55.2708);
   bool _isLoadingLoc = true;
   AppOrder? _selectedOrder;
-  
-  BitmapDescriptor? _customMarkerIcon;
 
   @override
   void initState() {
@@ -139,7 +138,7 @@ class _AvailableOrdersMapScreenState extends State<AvailableOrdersMapScreen> {
               position: _currentPos,
               icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
               infoWindow: const InfoWindow(title: "موقعك الحالي"),
-              zIndex: 2,
+              zIndexInt: 2,
             )
           };
 
@@ -153,14 +152,14 @@ class _AvailableOrdersMapScreenState extends State<AvailableOrdersMapScreen> {
                 position: loc,
                 icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
                 infoWindow: InfoWindow(
-                  title: "طلب #\${o.id.substring(0,6)}",
-                  snippet: "المسافة: \${dist.toStringAsFixed(1)} كم",
+                  title: "طلب #${o.id.substring(0,6)}",
+                  snippet: "المسافة: ${dist.toStringAsFixed(1)} كم",
                 ),
                 onTap: () {
                   setState(() => _selectedOrder = o);
                   _mapController?.animateCamera(CameraUpdate.newLatLngZoom(loc, 15));
                 },
-                zIndex: 1,
+                zIndexInt: 1,
               ));
             }
           }
@@ -189,7 +188,7 @@ class _AvailableOrdersMapScreenState extends State<AvailableOrdersMapScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text("جاري البحث في الرادار", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                          Text("يوجد \${orders.length} طلبات متاحة حولك", style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                          Text("يوجد ${orders.length} طلبات متاحة حولك", style: const TextStyle(color: Colors.white70, fontSize: 12)),
                         ],
                       ),
                     ],
@@ -235,7 +234,7 @@ class _AvailableOrdersMapScreenState extends State<AvailableOrdersMapScreen> {
                   children: [
                     const Icon(Icons.directions_car_rounded, size: 14, color: Colors.orange),
                     const SizedBox(width: 5),
-                    Text("\${dist.toStringAsFixed(1)} كم", style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 12)),
+                    Text("${dist.toStringAsFixed(1)} كم", style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 12)),
                   ],
                 ),
               ),
@@ -250,14 +249,14 @@ class _AvailableOrdersMapScreenState extends State<AvailableOrdersMapScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text("رقم الطلب", style: TextStyle(color: Colors.grey, fontSize: 10)),
-                    Text("#\${o.id.substring(0,6)}", style: AshallTheme.titleStyle.copyWith(fontSize: 18)),
+                    Text("#${o.id.substring(0,6)}", style: AshallTheme.titleStyle.copyWith(fontSize: 18)),
                   ],
                 ),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text("\${o.totalPrice} \${Provider.of<SystemSettingsProvider>(context, listen: false).settings.currencySymbol}", style: const TextStyle(fontWeight: FontWeight.w900, color: AshallTheme.secondaryColor, fontSize: 24)),
+                  Text("${o.totalPrice} ${Provider.of<SystemSettingsProvider>(context, listen: false).settings.currencySymbol}", style: const TextStyle(fontWeight: FontWeight.w900, color: AshallTheme.secondaryColor, fontSize: 24)),
                   const Text("إجمالي التحصيل", style: TextStyle(color: Colors.grey, fontSize: 10)),
                 ],
               ),

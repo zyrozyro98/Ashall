@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:math' show cos, sqrt, asin;
 
 import '../../models/order.dart';
-import '../../services/database_service.dart';
 import '../../services/location_service.dart';
 import '../../utils/style_constants.dart';
 import '../../widgets/premium_ui.dart';

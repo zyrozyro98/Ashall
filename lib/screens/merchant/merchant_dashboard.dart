@@ -161,7 +161,7 @@ class _MerchantDashboardState extends State<MerchantDashboard> {
                           child: Switch(
                             value: isOpen,
                             onChanged: (val) => FirebaseFirestore.instance.collection('users').doc(widget.uid).update({'isOnline': val}),
-                            activeColor: Colors.green,
+                            activeThumbColor: Colors.green,
                           ),
                         ),
                       ],
