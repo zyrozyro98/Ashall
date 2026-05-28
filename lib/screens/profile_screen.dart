@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../models/app_user.dart';
 import '../services/database_service.dart';
 import '../utils/style_constants.dart';
 import '../widgets/premium_ui.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/verification_service.dart';
+import '../providers/system_settings_provider.dart';
 
 import 'customer/wallet_screen.dart';
 import 'settings/app_info_screen.dart';
@@ -65,144 +67,52 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
                 const Spacer(),
-                ListTile(
-                  leading: const Icon(Icons.phone_android, color: AshallTheme.primaryColor),
-                  title: const Text("تغيير رقم الهاتف", style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(user.phone ?? "لم يتم تعيين رقم هاتف"),
-                  trailing: const Icon(Icons.edit, size: 16),
-                  onTap: () {
-                    String currentPhone = user.phone ?? '+967';
-                    showDialog(context: context, builder: (ctx) {
-                      final phoneC = TextEditingController(text: currentPhone.startsWith('+967') ? currentPhone : '+967');
-                      final otpC = TextEditingController();
-                      String vId = "";
-                      bool isVerifying = false;
-                      bool isOtpSent = false;
-                      
-                      return StatefulBuilder(
-                        builder: (context, setStateDialog) => AlertDialog(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                          title: Text(isOtpSent ? "تحقق من الرمز" : "تغيير رقم الهاتف", style: AshallTheme.titleStyle),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
+                // Phone Verification Premium Card
+                InteractiveCard(
+                  onTap: () => _showSmartVerificationBottomSheet(context, user),
+                  child: Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: user.isPhoneVerified ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            user.isPhoneVerified ? Icons.verified_rounded : Icons.gpp_maybe_rounded,
+                            color: user.isPhoneVerified ? Colors.green : Colors.orange,
+                          ),
+                        ),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (!isOtpSent) ...[
-                                const Text("أدخل رقم الهاتف الجديد ليصلك كود التحقق", style: TextStyle(fontSize: 13, color: Colors.grey)),
-                                const SizedBox(height: 15),
-                                TextField(
-                                  controller: phoneC,
-                                  keyboardType: TextInputType.phone,
-                                  decoration: InputDecoration(
-                                    hintText: "+9677xxxxxxxx",
-                                    prefixIcon: const Icon(Icons.phone_android, color: AshallTheme.primaryColor),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                  ),
-                                ),
-                              ] else ...[
-                                Text("تم إرسال كود التحقق للرقم ${phoneC.text}", style: const TextStyle(fontSize: 13, color: Colors.blue)),
-                                const SizedBox(height: 15),
-                                TextField(
-                                  controller: otpC,
-                                  keyboardType: TextInputType.number,
-                                  decoration: InputDecoration(
-                                    hintText: "أدخل الكود (6 أرقام)",
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                  ),
-                                ),
-                              ],
-                              if (isVerifying) const Padding(
-                                padding: EdgeInsets.only(top: 15),
-                                child: Center(child: CircularProgressIndicator()),
-                              )
+                              const Text("رقم الهاتف والتوثيق", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              const SizedBox(height: 4),
+                              Text(
+                                user.phone ?? "لم يتم تعيين رقم هاتف",
+                                style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                              ),
                             ],
                           ),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("إلغاء")),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: AshallTheme.primaryColor, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                              onPressed: isVerifying ? null : () async {
-                                final db = DatabaseService();
-                                setStateDialog(() => isVerifying = true);
-                                try {
-                                  if (!isOtpSent) {
-                                    // Step 1: Check Pre-requisites & Send OTP
-                                    bool hasActive = await db.hasActiveUserOrders(userId);
-                                    if (hasActive) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("لا يمكن تغيير رقم الهاتف لوجود طلبات جارية")));
-                                        Navigator.pop(ctx);
-                                      }
-                                      return;
-                                    }
-                                    
-                                    if (user.lastPhoneChange != null) {
-                                      final diff = DateTime.now().difference(user.lastPhoneChange!).inDays;
-                                      if (diff < 30) {
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("لا يمكن تغيير رقم الهاتف إلا بعد مرور شهر من آخر تغيير. المتبقي ${30 - diff} يوم")));
-                                          Navigator.pop(ctx);
-                                        }
-                                        return;
-                                      }
-                                    }
-                                    
-                                    final newPhone = phoneC.text.trim();
-                                    if (!RegExp(r'^\+9677[0-9]{8}$').hasMatch(newPhone)) {
-                                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("رقم الهاتف غير صحيح")));
-                                      setStateDialog(() => isVerifying = false);
-                                      return;
-                                    }
-
-                                    // Firebase Verify
-                                    await FirebaseAuth.instance.verifyPhoneNumber(
-                                      phoneNumber: newPhone,
-                                      verificationCompleted: (PhoneAuthCredential cred) async {
-                                         await auth.linkPhoneNumber(cred, newPhone);
-                                         if (context.mounted) {
-                                           Navigator.pop(ctx);
-                                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم التحقق وتغيير الرقم تلقائياً")));
-                                         }
-                                      },
-                                      verificationFailed: (err) {
-                                        setStateDialog(() => isVerifying = false);
-                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("فشل التحقق: ${err.message}")));
-                                      },
-                                      codeSent: (v, t) {
-                                        setStateDialog(() {
-                                          vId = v;
-                                          isOtpSent = true;
-                                          isVerifying = false;
-                                        });
-                                      },
-                                      codeAutoRetrievalTimeout: (v) => vId = v,
-                                    );
-                                  } else {
-                                    // Step 2: Verify OTP
-                                    final code = otpC.text.trim();
-                                    if (code.length < 6) { throw Exception("أدخل الكود المكون من 6 أرقام"); }
-                                    
-                                    PhoneAuthCredential cred = PhoneAuthProvider.credential(verificationId: vId, smsCode: code);
-                                    await auth.linkPhoneNumber(cred, phoneC.text.trim());
-                                    
-                                    if (context.mounted) {
-                                      Navigator.pop(ctx);
-                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم تحديث الهاتف بنجاح"), backgroundColor: Colors.green));
-                                    }
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    setStateDialog(() => isVerifying = false);
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));
-                                  }
-                                }
-                              },
-                              child: Text(isOtpSent ? "تأكيد" : "إرسال الكود", style: const TextStyle(color: Colors.white)),
-                            ),
-                          ],
                         ),
-                      );
-                    });
-                  },
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: user.isPhoneVerified ? Colors.green : Colors.orange,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            user.isPhoneVerified ? "موثق" : "تفعيل الآن",
+                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 ListTile(
                   leading: const Icon(Icons.description_outlined, color: AshallTheme.primaryColor),
@@ -227,6 +137,128 @@ class ProfileScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _showSmartVerificationBottomSheet(BuildContext context, AppUser user) {
+    final phoneC = TextEditingController(text: user.phone ?? '+967');
+    final SmartVerificationService verifyS = SmartVerificationService();
+    bool isLoading = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setStateSheet) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Container(
+            padding: const EdgeInsets.all(25),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(width: 50, height: 5, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
+                const SizedBox(height: 25),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: user.isPhoneVerified ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    user.isPhoneVerified ? Icons.verified_user_rounded : Icons.security_rounded,
+                    size: 60,
+                    color: user.isPhoneVerified ? Colors.green : Colors.orange,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  user.isPhoneVerified ? "حسابك موثق ومحمي" : "توثيق الحساب الذكي",
+                  style: AshallTheme.titleStyle.copyWith(fontSize: 22),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  user.isPhoneVerified 
+                    ? "رقم هاتفك موثق بنجاح. يمكنك تغييره إذا أردت ولكن ستحتاج إلى توثيقه مرة أخرى."
+                    : "نستخدم تقنية التوثيق عبر الواتساب لضمان أمان حسابك وسهولة التفعيل مجاناً وبدون رسائل نصية معقدة.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 13, height: 1.5),
+                ),
+                const SizedBox(height: 25),
+                PremiumTextField(
+                  label: "رقم الهاتف",
+                  controller: phoneC,
+                  icon: Icons.phone_android_rounded,
+                  hint: "+9677xxxxxxxx",
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 20),
+                PremiumButton(
+                  text: user.isPhoneVerified ? "تحديث وتوثيق الرقم الجديد" : "بدء التوثيق عبر الواتساب",
+                  icon: Icons.chat_bubble_rounded,
+                  isLoading: isLoading,
+                  onPressed: () async {
+                    if (phoneC.text.length < 9) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text("يرجى إدخال رقم هاتف صحيح")));
+                      return;
+                    }
+
+                    setStateSheet(() => isLoading = true);
+                    try {
+                      final adminPhone = Provider.of<SystemSettingsProvider>(ctx, listen: false).settings.contactPhone;
+                      final token = verifyS.generateToken();
+                      
+                      // Check for active orders if changing phone
+                      if (user.phone != null && user.phone != phoneC.text) {
+                          bool hasActive = await DatabaseService().hasActiveUserOrders(user.uid);
+                          if (hasActive) {
+                              if (!ctx.mounted) return;
+                              ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text("لا يمكن تغيير رقم الهاتف لوجود طلبات جارية")));
+                              setStateSheet(() => isLoading = false);
+                              return;
+                          }
+                      }
+
+                      // Update Firestore with new number and unverified status
+                      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+                        'phone': phoneC.text,
+                        'isPhoneVerified': false,
+                        'lastPhoneChange': DateTime.now().toIso8601String(),
+                      });
+
+                      // Launch WhatsApp
+                      await verifyS.startWhatsAppVerification(
+                        phone: phoneC.text,
+                        token: token,
+                        adminPhone: adminPhone,
+                      );
+                      
+                      if (!ctx.mounted) return;
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
+                        content: Text("تم فتح الواتساب. أرسل الرسالة ثم انتظر تفعيل حسابك"),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 10),
+                      ));
+                    } catch (e) {
+                      if (!ctx.mounted) return;
+                      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text("حدث خطأ: $e"), backgroundColor: Colors.red));
+                    } finally {
+                      setStateSheet(() => isLoading = false);
+                    }
+                  },
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
