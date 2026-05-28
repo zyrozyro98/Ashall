@@ -3,10 +3,6 @@ import '../../models/app_user.dart';
 import '../../services/auth_service.dart';
 import '../../utils/style_constants.dart';
 import '../../widgets/premium_ui.dart';
-import '../../services/verification_service.dart';
-import '../../providers/system_settings_provider.dart';
-import 'package:provider/provider.dart';
-
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
@@ -14,16 +10,12 @@ class SignupScreen extends StatefulWidget {
   State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
-  final _emailC = TextEditingController();
   final _passC = TextEditingController();
   final _nameC = TextEditingController();
   final _phoneC = TextEditingController(text: '+967');
   UserRole _selectedRole = UserRole.customer;
   bool _isLoading = false;
   final AuthService _auth = AuthService();
-  final SmartVerificationService _verifyS = SmartVerificationService();
-  String? _verificationToken;
 
   @override
   Widget build(BuildContext context) {
@@ -85,14 +77,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 15),
                   PremiumTextField(
-                    label: "البريد الإلكتروني", 
-                    controller: _emailC, 
-                    icon: Icons.email_outlined,
-                    hint: "name@example.com",
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 15),
-                  PremiumTextField(
                     label: "رقم الهاتف (للتوثيق)", 
                     controller: _phoneC, 
                     icon: Icons.phone_android,
@@ -111,28 +95,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(height: 30),
                   
                   PremiumButton(
-                    text: "إنشاء الحساب والتحقق",
+                    text: "إنشاء حساب جديد",
                     isLoading: _isLoading,
                     onPressed: _handleSignup,
                   ),
-                  
-                  const SizedBox(height: 15),
-                  const Row(
-                    children: [
-                      Expanded(child: Divider()),
-                      Padding(padding: EdgeInsets.symmetric(horizontal: 10), child: Text("أو تفعيل مجاني ذكي", style: TextStyle(color: Colors.grey, fontSize: 10))),
-                      Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 15),
-                  
-                  PremiumButton(
-                    text: "التحقق عبر الواتساب (مجاناً)",
-                    icon: Icons.chat_bubble_outline_rounded,
-                    secondary: true,
-                    onPressed: _handleWhatsAppVerify,
-                  ),
-                  
                   const SizedBox(height: 25),
                   
                   Center(
@@ -184,40 +150,14 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  Future<void> _handleWhatsAppVerify() async {
-    if (_phoneC.text.length < 9) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى إدخال رقم هاتف صحيح")));
-      return;
-    }
 
-    setState(() => _isLoading = true);
-    try {
-      _verificationToken = _verifyS.generateToken();
-      final adminPhone = Provider.of<SystemSettingsProvider>(context, listen: false).settings.contactPhone;
-      
-      await _verifyS.startWhatsAppVerification(
-        phone: _phoneC.text, 
-        token: _verificationToken!, 
-        adminPhone: adminPhone,
-      );
-      
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("تم فتح الواتساب. أرسل الرسالة ثم انتظر تفعيل حسابك"),
-        duration: Duration(seconds: 10),
-      ));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
 
   void _handleSignup() async {
-    final email = _emailC.text.trim();
     final pass = _passC.text.trim();
     final name = _nameC.text.trim();
     final phone = _phoneC.text.trim();
 
-    if (email.isEmpty || pass.isEmpty || name.isEmpty || phone.isEmpty) {
+    if (pass.isEmpty || name.isEmpty || phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى ملء جميع الحقول")));
       return;
     }
@@ -236,19 +176,20 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // 1. Create account directly via Email/Pass
-      await _auth.signUp(email, pass, name, _selectedRole, phone: phone);
+      String generatedEmail = "${phone.replaceAll('+', '')}@ashall.com";
+      // 1. Create account directly via Phone (mapped to Email internally)
+      await _auth.signUp(generatedEmail, pass, name, _selectedRole, phone: phone);
       
       if (!mounted) return;
       
       // 2. Success Feedback
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("تم إنشاء الحساب! سيتم تفعيله بعد التحقق من رسالة الواتساب."),
+        content: Text("تم إنشاء الحساب بنجاح!"),
         backgroundColor: Colors.green,
-        duration: Duration(seconds: 5),
+        duration: Duration(seconds: 3),
       ));
       
-      // 3. Move to home (they will be restricted if not verified)
+      // 3. Move to home
       Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
 
     } catch (e) {

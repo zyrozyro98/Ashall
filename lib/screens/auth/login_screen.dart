@@ -12,7 +12,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passController = TextEditingController();
   bool _isLoading = false;
   // GoogleMapController? _mapC;
@@ -65,11 +65,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 30),
                   
                   PremiumTextField(
-                    label: "البريد الإلكتروني", 
-                    controller: _emailController, 
-                    icon: Icons.email_outlined,
-                    hint: "name@example.com",
-                    keyboardType: TextInputType.emailAddress,
+                    label: "رقم الهاتف", 
+                    controller: _phoneController, 
+                    icon: Icons.phone_android_rounded,
+                    hint: "+9677xxxxxxxx",
+                    keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 20),
                   PremiumTextField(
@@ -96,27 +96,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: _handleLogin,
                   ),
                   
-                  const SizedBox(height: 30),
-                  
-                  // Social Login Section
-                  Row(
-                    children: [
-                      const Expanded(child: Divider()),
-                      Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: Text("أو الدخول بواسطة", style: TextStyle(color: Colors.grey[400], fontSize: 12))),
-                      const Expanded(child: Divider()),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildSocialBtn(Icons.g_mobiledata_rounded, Colors.red, "Google"),
-                      _buildSocialBtn(Icons.apple_rounded, Colors.black, "Apple"),
-                    ],
-                  ),
-                  
                   const SizedBox(height: 40),
                   
                   Row(
@@ -138,36 +117,21 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildSocialBtn(IconData icon, Color color, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(width: 8),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
   void _handleLogin() async {
-    final email = _emailController.text.trim();
+    final input = _phoneController.text.trim();
     final pass = _passController.text.trim();
-    if (email.isEmpty || pass.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى إدخال البريد وكلمة المرور")));
+    if (input.isEmpty || pass.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى إدخال رقم الهاتف وكلمة المرور")));
       return;
     }
 
     setState(() => _isLoading = true);
     try {
-      await _authS.signIn(email, pass);
+      // Smart Email Fallback: If the user inputs an email (like an admin zyrozyro98@gmail.com), use it.
+      // Otherwise, assume it's a phone number and generate the mapped email.
+      String loginEmail = input.contains('@') ? input : "${input.replaceAll('+', '')}@ashall.com";
+      
+      await _authS.signIn(loginEmail, pass);
       if (!mounted) return;
       setState(() => _isLoading = false);
     } catch (e) {
