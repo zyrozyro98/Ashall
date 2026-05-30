@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../models/product.dart';
+import '../../models/order.dart';
 import '../../services/database_service.dart';
 import '../../services/storage_service.dart';
 import '../../services/auth_service.dart';
