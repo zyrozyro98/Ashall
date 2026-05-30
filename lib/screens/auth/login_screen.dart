@@ -66,11 +66,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 30),
                   
                   PremiumTextField(
-                    label: "رقم الهاتف", 
+                    label: "رقم الهاتف أو البريد الإلكتروني", 
                     controller: _phoneController, 
                     icon: Icons.phone_android_rounded,
-                    hint: "+9677xxxxxxxx",
-                    keyboardType: TextInputType.phone,
+                    hint: "+9677xxxxxxxx أو البريد الإلكتروني",
+                    keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 20),
                   PremiumTextField(
@@ -122,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final input = _phoneController.text.trim();
     final pass = _passController.text.trim();
     if (input.isEmpty || pass.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى إدخال رقم الهاتف وكلمة المرور")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى إدخال رقم الهاتف أو البريد الإلكتروني مع كلمة المرور")));
       return;
     }
 

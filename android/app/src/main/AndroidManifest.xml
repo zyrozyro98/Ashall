@@ -30,6 +30,11 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- Disable Impeller on Android to support older devices with limited GPU drivers -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBzsMyaLQpBu7gj6UfMdEfzLqAQRORNX1k"/>
