@@ -266,29 +266,49 @@ class _MerchantDashboardState extends State<MerchantDashboard> {
     );
   }
 
-  Widget _buildSummaryCard(String title, String collection, IconData icon, Color color, {bool isOrder = false}) {
-    Query query = FirebaseFirestore.instance.collection(collection).where('merchantId', isEqualTo: widget.uid);
-    // Avoid 'isNotEqualTo' to keep queries simple and avoid missing index errors
+  Widget _buildSummaryCard(String title, String type, IconData icon, Color color, {bool isOrder = false}) {
     if (isOrder) {
-      query = query.where('status', whereIn: [0, 1, 2, 3]);
+      return StreamBuilder<List<AppOrder>>(
+        stream: _db.getMerchantOrders(widget.uid),
+        builder: (context, snap) {
+          int count = 0;
+          if (snap.hasData) {
+            count = snap.data!.where((o) => o.status.index >= 0 && o.status.index <= 3).length;
+          }
+          String val = snap.hasData ? count.toString() : "...";
+          return _buildCardUI(title, val, icon, color);
+        },
+      );
+    } else {
+      return StreamBuilder<List<Product>>(
+        stream: _db.getMerchantProducts(widget.uid),
+        builder: (context, snap) {
+          int count = 0;
+          if (snap.hasData) {
+            count = snap.data!.length;
+          }
+          String val = snap.hasData ? count.toString() : "...";
+          return _buildCardUI(title, val, icon, color);
+        },
+      );
     }
+  }
 
-    return FutureBuilder<AggregateQuerySnapshot>(
-      future: query.count().get(),
-      builder: (context, snap) {
-        String val = snap.hasData ? snap.data!.count.toString() : "...";
-        return PremiumCard(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle), child: Icon(icon, color: color, size: 24)),
-              const SizedBox(height: 12),
-              Text(val, style: AshallTheme.titleStyle.copyWith(fontSize: 24, fontWeight: FontWeight.w900)),
-              Text(title, style: AshallTheme.subtitleStyle.copyWith(fontSize: 12)),
-            ],
+  Widget _buildCardUI(String title, String val, IconData icon, Color color) {
+    return PremiumCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10), 
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle), 
+            child: Icon(icon, color: color, size: 24)
           ),
-        );
-      },
+          const SizedBox(height: 12),
+          Text(val, style: AshallTheme.titleStyle.copyWith(fontSize: 24, fontWeight: FontWeight.w900)),
+          Text(title, style: AshallTheme.subtitleStyle.copyWith(fontSize: 12)),
+        ],
+      ),
     );
   }
 
